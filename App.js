@@ -96,7 +96,7 @@ App.post('/uploadImages',uploadImage.single('reference_image'),(req,res)=>{
         else{
             if(req.file.path){
                 console.log(req.file)
-                res.status(200).json({path:req.file.path})
+                res.status(200).json({path:`http://localhost:${process.env.PORT}/images/`+req.file.filename})
             }
             else{
                 res.status(400).json({message:"Something went wrong : "+req})
@@ -104,7 +104,7 @@ App.post('/uploadImages',uploadImage.single('reference_image'),(req,res)=>{
         }
     }
     catch(error){
-        res.status(400).json({error:error})
+        res.status(400).json({message:error})
     }
 })
 
@@ -119,13 +119,31 @@ App.post('/storestreams',async(req,res)=>{
     try{
         const stream = await stream_model.create({degreename:degreename,streamname:streamname,RefImage:RefImage})
         if(stream){
-            res.status(200).json({success:"Data's stored"})
+            res.status(200).json({message:"Data's stored"})
         }
         else{
             res.status(400).json({message:res})
         }
     }
     catch(error){
-        res.status(400).json({error:error})
+        res.status(400).json({message:error})
     }
 })
+
+App.get('/getstreams',async(req,res)=>{
+    try{
+        const streams = await stream_model.find();
+        if(!streams){
+            res.status(400).json({message:"Couldn't reach the servers"});
+        }
+        else{
+            res.status(200).send(streams);
+            console.log(streams);
+        }
+    }
+    catch(error){
+        res.status(400).json({message:error});
+    }
+})
+
+App.use('/images',express.static('images'));
