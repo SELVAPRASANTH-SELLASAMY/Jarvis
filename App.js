@@ -45,9 +45,9 @@ App.post('/createuser',async(req,res)=>{
     }
 })
 App.post('/adminlogin',async(req,res)=>{
-    const {email,password} = req.body
     // console.log(email);
     try{
+        const {email,password} = req.body
         const admin = await admin_model.findOne({email:email})
         if(admin){
             const dbpassword = admin.password
@@ -115,8 +115,8 @@ if(!fs.existsSync(dir)){
 }
 
 App.post('/storestreams',async(req,res)=>{
-    const {degreename,streamname,RefImage} = req.body
     try{
+        const {degreename,streamname,RefImage} = req.body
         const stream = await stream_model.create({degreename:degreename,streamname:streamname,RefImage:RefImage})
         if(stream){
             res.status(200).json({message:"Data's stored"})
@@ -147,3 +147,35 @@ App.get('/getstreams',async(req,res)=>{
 })
 
 App.use('/images',express.static('images'));
+
+App.delete('/deletestream/:id',async(req,res)=>{
+    const {id} = req.params
+    try{
+        const deleteRequest = await stream_model.findByIdAndDelete(id)
+        if(!deleteRequest){
+            res.status(400).json({message:deleteRequest})
+        }
+        else{
+            res.status(200).json({message:"deleted"})
+        }
+    }
+    catch(error){
+        res.status(400).json({message:error})
+    }
+})
+
+App.put('/updatestream',async(req,res)=>{
+    try{
+        const {degreename,streamname,RefImage,id} = req.body;
+        const update = await stream_model.findByIdAndUpdate(id,{degreename:degreename,streamname:streamname,RefImage:RefImage})
+        if(!update){
+            res.status(400).json({message:"Something went wrong"})
+        }
+        else{
+            res.status(200).json({message:"Updated"})
+        }
+    }
+    catch(error){
+        res.status(400).json({message:error})
+    }
+})
