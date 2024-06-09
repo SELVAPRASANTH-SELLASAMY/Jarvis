@@ -45,7 +45,6 @@ App.post('/createuser',async(req,res)=>{
     }
 })
 App.post('/adminlogin',async(req,res)=>{
-    // console.log(email);
     try{
         const {email,password} = req.body
         const admin = await admin_model.findOne({email:email})
@@ -54,7 +53,6 @@ App.post('/adminlogin',async(req,res)=>{
             const password_verify = await bcrypt.compare(password,dbpassword)
             if(password_verify){
                 const token = jwt.sign({adminId:admin._id},process.env.SECRET,{expiresIn: '1h'})
-                // console.log(token)
                 res.cookie('SessionId',token,{
                     httpOnly:true,
                     secure:true,
@@ -86,27 +84,7 @@ const storage = multer.diskStorage({
     }
 })
 
-const uploadImage = multer({storage:storage,limits:{fileSize:1000000}})
-
-App.post('/uploadImages',uploadImage.single('reference_image'),(req,res)=>{
-    try{
-        if(!req.file){
-            res.status(400).json({message:"Couldn't upload image file"})
-        }
-        else{
-            if(req.file.path){
-                console.log(req.file)
-                res.status(200).json({path:`http://localhost:${process.env.PORT}/images/`+req.file.filename})
-            }
-            else{
-                res.status(400).json({message:"Something went wrong : "+req})
-            }
-        }
-    }
-    catch(error){
-        res.status(400).json({message:error})
-    }
-})
+const uploadImage = multer({storage:storage,limits:{fileSize:2000000}})
 
 const fs = require('fs')
 const dir = './images'
@@ -114,12 +92,13 @@ if(!fs.existsSync(dir)){
     fs.mkdirSync('./images')
 }
 
-App.post('/storestreams',async(req,res)=>{
+App.post('/storestreams',uploadImage.single('RefImage'),async(req,res)=>{
     try{
-        const {degreename,streamname,RefImage} = req.body
-        const stream = await stream_model.create({degreename:degreename,streamname:streamname,RefImage:RefImage})
+        const {degreename,streamname} = req.body
+        const FileName = 'http://localhost:3001/images/'+req.file.filename
+        const stream = await stream_model.create({degreename:degreename,streamname:streamname,RefImage:FileName})
         if(stream){
-            res.status(200).json({message:"Data's stored"})
+            res.status(200).json({message:"Data's stored",path:`${FileName}`})
         }
         else{
             res.status(400).json({message:res})
@@ -132,7 +111,7 @@ App.post('/storestreams',async(req,res)=>{
 
 App.get('/getstreams',async(req,res)=>{
     try{
-        const streams = await stream_model.find();
+        const streams = await stream_model.find()
         if(!streams){
             res.status(400).json({message:"Couldn't reach the servers"});
         }
@@ -164,10 +143,11 @@ App.delete('/deletestream/:id',async(req,res)=>{
     }
 })
 
-App.put('/updatestream',async(req,res)=>{
+App.put('/updatestream',uploadImage.single('RefImage'),async(req,res)=>{
     try{
-        const {degreename,streamname,RefImage,id} = req.body;
-        const update = await stream_model.findByIdAndUpdate(id,{degreename:degreename,streamname:streamname,RefImage:RefImage})
+        const {degreename,streamname,id} = req.body
+        const FileName = 'http://localhost:3001/images/'+req.file.filename
+        const update = await stream_model.findByIdAndUpdate(id,{degreename:degreename,streamname:streamname,RefImage:FileName})
         if(!update){
             res.status(400).json({message:"Something went wrong"})
         }
