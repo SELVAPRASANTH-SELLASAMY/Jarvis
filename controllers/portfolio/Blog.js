@@ -1,28 +1,17 @@
-const multer = require("multer");
-const fs = require("fs");
-const uploadPath = "uploads";
-if(!fs.existsSync(uploadPath)){
-    fs.mkdirSync(uploadPath);
-}
-const storage = multer.diskStorage({
-    destination : (req,file,cb) => {
-        cb(null,uploadPath);
-    },
-    filename : (req,file,cb) => {
-        cb(null,`${Date.now()}_${file.originalname}`);
-    }
-});
-const upload = multer({storage});
-const handleImageUpload = (req,res) => {
-    console.log(req.file.path);
+const mongoose = require('mongoose');
+const blogModel = require('../../models/Blog');
+const addBlogs = async(req,res) => {
+    const db = "portfolio";
     try{
-        if(req.file){
-            return res.status(200).json({path:`http://localhost:3001/${req.file.path}`});
-        }
-        return res.status(400).json({error:"Couldn't upload file"});
+        await mongoose.connect(`mongodb://localhost:27017/${db}`);
+        await blogModel.insertMany(req.body);
+        res.status(201).json({message:"blog saved!"});
     }
     catch(error){
-        return res.status(400).json({error:error});
+        res.status(500).json({message:"Something went wrong"});
+    }
+    finally{
+        await mongoose.disconnect();
     }
 }
-module.exports = {upload,handleImageUpload};
+module.exports = {addBlogs};

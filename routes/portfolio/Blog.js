@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const {upload,handleImageUpload} = require('../../controllers/portfolio/Blog');
-router.post("/uploadimage",upload.single("image"),handleImageUpload);
+const {addBlogs} = require('../../controllers/portfolio/Blog');
+const {saveImage} = require('../../middlewares/Blog');
+router.post("/add",saveImage,addBlogs);
 module.exports = router;

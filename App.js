@@ -1,10 +1,12 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const bodyparser = require('body-parser');
 const routes = require('./routes/portfolio/Email');
 const blog_routes = require('./routes/portfolio/Blog');
 dotenv.config();
 const App = express();
+App.use(bodyparser.json({limit:'50mb'}));
 App.use(cors());
 App.use(express.json());
 App.use('/portfolio',routes);
