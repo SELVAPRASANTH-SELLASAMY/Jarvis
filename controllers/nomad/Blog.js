@@ -59,7 +59,7 @@ const fetchAll = (_,res) => {
             const match = content.match(imgRegex);
             return match ? match[1] : null;
         };
-        let retrivedBlogs = await blogModel.find({},{title:1,content:1}).lean();
+        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1}).lean();
         if(retrivedBlogs.length < 1){
             return res.status(404).send();
         }
