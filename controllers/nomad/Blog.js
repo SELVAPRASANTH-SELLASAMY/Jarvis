@@ -1,3 +1,4 @@
+const sharp = require('sharp');
 const blogModel = require("../../models/nomad/Blog");
 const { connect, disConnect } = require("../db");
 
@@ -18,6 +19,16 @@ const exceptionBound = async(statement,res) => {
             console.warn(`Error while disconnecting from the database ${error}`);
         }
     }
+}
+
+const resizeImage = async(image) => {
+    const base64 = image.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64,"base64");
+    const resizedBuffer = await sharp(buffer)
+    .resize({width:10,withoutEnlargement: true})
+    .toBuffer();
+    const stringUrl = resizedBuffer.toString("base64");
+    return `data:image/png;base64,${stringUrl}`;
 }
 
 const handleNewBlog = (req,res) => {
@@ -48,13 +59,16 @@ const fetchAll = (_,res) => {
             const match = content.match(imgRegex);
             return match ? match[1] : null;
         };
-        let retrivedBlogs = await blogModel.find({},{title:1,content:1});
+        let retrivedBlogs = await blogModel.find({},{title:1,content:1}).lean();
         if(retrivedBlogs.length < 1){
             return res.status(404).send();
         }
-        retrivedBlogs.forEach((blog)=>{
-            blog.content = getImage(blog.content);
-        })
+        retrivedBlogs = await Promise.all(retrivedBlogs.map(async(blog) => {
+            const img = getImage(blog.content);
+            blog.content = img;
+            blog.lazyImage = await resizeImage(img);
+            return blog;
+        }))
         return res.status(200).json({response:retrivedBlogs});
     },res);
 }
