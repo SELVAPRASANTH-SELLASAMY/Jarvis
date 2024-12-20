@@ -44,6 +44,9 @@ const handleNewBlog = (req,res) => {
 const getContent = (req,res) => {
     exceptionBound(async() => {
         const id = await req.query.id;
+        if(!id){
+            return res.status(400).send("Bad request");
+        }
         const retrivedBlogs = await blogModel.findOne({_id:id},{"_id":0,"__v":0});
         if(retrivedBlogs.length < 1){
             return res.status(404).send("Resource not found");
