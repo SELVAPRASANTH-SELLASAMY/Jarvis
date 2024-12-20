@@ -33,10 +33,7 @@ const resizeImage = async(image) => {
 
 const handleNewBlog = (req,res) => {
     exceptionBound(async() => {
-        const createBlog = await blogModel.create(req.body);
-        if(!createBlog){
-            return res.status(400).send("Couldn't save blog into database");
-        }
+        await blogModel.create(req.body);
         return res.status(201).send("Blog saved successfully");
     },res);
 }
@@ -76,4 +73,18 @@ const fetchAll = (_,res) => {
     },res);
 }
 
-module.exports = { handleNewBlog, getContent, fetchAll };
+const deleteBlog = (req,res) => {
+    exceptionBound(async() => {
+        const id = await req.query.id;
+        if(!id){
+            return res.status(400).send("Bad request");
+        }
+        const deletion = await blogModel.deleteOne({_id:id});
+        if(deletion.deletedCount > 0){
+            return res.status(200).send("Blog deleted successfully");
+        }
+        return res.status(404).send("Couldn't delete the blog");
+    },res);
+}
+
+module.exports = { handleNewBlog, getContent, fetchAll, deleteBlog };
