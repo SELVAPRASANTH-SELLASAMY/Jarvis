@@ -40,7 +40,7 @@ const handleNewBlog = (req,res) => {
 
 const getContent = (req,res) => {
     exceptionBound(async() => {
-        const id = await req.query.id;
+        const id = req.query.id;
         if(!id){
             return res.status(400).send("Bad request");
         }
@@ -75,7 +75,7 @@ const fetchAll = (_,res) => {
 
 const deleteBlog = (req,res) => {
     exceptionBound(async() => {
-        const id = await req.query.id;
+        const id = req.query.id;
         if(!id){
             return res.status(400).send("Bad request");
         }
@@ -87,4 +87,19 @@ const deleteBlog = (req,res) => {
     },res);
 }
 
-module.exports = { handleNewBlog, getContent, fetchAll, deleteBlog };
+const updateBlog = (req,res) => {
+    exceptionBound(async() => {
+        const id = req.query.id;
+        const fields = req.body;
+        if(!id){
+            return res.status(400).send("Bad request");
+        }
+        const update = await blogModel.updateOne({_id:id},{$set:fields},{runValidators:true});
+        if(update.modifiedCount <= 0){
+            return res.status(404).send("Couldn't update blog");
+        }
+        return res.status(200).send("Blog updated successfully");
+    },res);
+}
+
+module.exports = { handleNewBlog, getContent, fetchAll, deleteBlog, updateBlog };
