@@ -44,11 +44,11 @@ const getContent = (req,res) => {
         if(!id){
             return res.status(400).send("Bad request");
         }
-        const retrivedBlogs = await blogModel.findOne({_id:id},{"_id":0,"__v":0});
-        if(retrivedBlogs.length < 1){
+        const retrivedContent = await blogModel.findOne({_id:id},{"_id":0,"__v":0,"createdAt":0,"updatedAt":0});
+        if(retrivedContent.length < 1){
             return res.status(404).send("Resource not found");
         }
-        return res.status(200).send(retrivedBlogs);
+        return res.status(200).send(retrivedContent);
     },res);
 }
 
@@ -96,7 +96,7 @@ const updateBlog = (req,res) => {
         }
         const update = await blogModel.updateOne({_id:id},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
-            return res.status(404).send("Couldn't update blog");
+            return res.status(400).send("Couldn't update blog");
         }
         return res.status(200).send("Blog updated successfully");
     },res);
