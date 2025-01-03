@@ -52,14 +52,19 @@ const getContent = (req,res) => {
     },res);
 }
 
-const fetchAll = (_,res) => {
+const fetchAll = (req,res) => {
     exceptionBound(async() => {
         const getImage = (content) => {
             const imgRegex = /<img[^>]+src="([^">]+)"/i;
             const match = content.match(imgRegex);
             return match ? match[1] : null;
         };
-        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1}).lean();
+
+        const { page } = req.query;
+        const Limit = 5;
+        const Skip = ((page - 1) * Limit);
+        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1}).skip(Skip).limit(Limit).lean();
+        const totalBlogs = await blogModel.countDocuments();
         if(retrivedBlogs.length < 1){
             return res.status(404).send("No blog found");
         }
@@ -69,7 +74,10 @@ const fetchAll = (_,res) => {
             blog.lazyImage = await resizeImage(img);
             return blog;
         }))
-        return res.status(200).send(retrivedBlogs);
+        return res.status(200).json({
+            data: retrivedBlogs,
+            hasMore: ((Skip + Limit) <= totalBlogs)
+        });
     },res);
 }
 
