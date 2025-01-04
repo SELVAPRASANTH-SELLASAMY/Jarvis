@@ -76,7 +76,7 @@ const fetchAll = (req,res) => {
         }))
         return res.status(200).json({
             data: retrivedBlogs,
-            hasMore: ((Skip + Limit) <= totalBlogs)
+            hasMore: ((Skip + Limit) < totalBlogs)
         });
     },res);
 }
