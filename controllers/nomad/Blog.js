@@ -60,10 +60,14 @@ const fetchAll = (req,res) => {
             return match ? match[1] : null;
         };
 
-        const { page } = req.query;
+        const { page, sortby, ascending } = req.query;
         const Limit = 5;
         const Skip = ((page - 1) * Limit);
-        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1}).skip(Skip).limit(Limit).lean();
+        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1})
+                            .sort({[sortby]: Number(ascending)})
+                            .skip(Skip)
+                            .limit(Limit)
+                            .lean();
         const totalBlogs = await blogModel.countDocuments();
         if(retrivedBlogs.length < 1){
             return res.status(404).send("No blog found");
