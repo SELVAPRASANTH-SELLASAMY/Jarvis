@@ -60,11 +60,14 @@ const fetchAll = (req,res) => {
             return match ? match[1] : null;
         };
 
-        const { page, sortby, ascending } = req.query;
+        const { page, sortby, ascending, category } = req.query;
         const Limit = 5;
         const Skip = ((page - 1) * Limit);
-        let retrivedBlogs = await blogModel.find({},{title:1,content:1,createdAt:1,category:1})
-                            .sort({[sortby]: Number(ascending)})
+
+        const filters = category === "All" ? {} : {category:category};
+
+        let retrivedBlogs = await blogModel.find(filters, {title:1,content:1,createdAt:1,category:1})
+                            .sort({[sortby]: Number(ascending),createdAt: Number(ascending),_id:1})
                             .skip(Skip)
                             .limit(Limit)
                             .lean();
