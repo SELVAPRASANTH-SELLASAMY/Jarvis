@@ -60,11 +60,17 @@ const fetchAll = (req,res) => {
             return match ? match[1] : null;
         };
 
-        const { page, sortby, ascending, category } = req.query;
+        const { page, sortby, ascending, category, search } = req.query;
         const Limit = 5;
         const Skip = ((page - 1) * Limit);
 
-        const filters = category === "All" ? {} : {category:category};
+        const categoryFilter = category === "All" ? {} : {category:category};
+        const searchFilter = (search.length > 3 || search.length === 0) ? {title:{$regex:search}} : {};
+
+        const filters = {
+            ...categoryFilter,
+            ...searchFilter
+        };
 
         let retrivedBlogs = await blogModel.find(filters, {title:1,content:1,createdAt:1,category:1})
                             .sort({[sortby]: Number(ascending),createdAt: Number(ascending),_id:1})
@@ -83,7 +89,7 @@ const fetchAll = (req,res) => {
         }))
         return res.status(200).json({
             data: retrivedBlogs,
-            hasMore: ((Skip + Limit) < totalBlogs)
+            hasMore: (retrivedBlogs.length >= Limit) && ((Skip + Limit) < totalBlogs)
         });
     },res);
 }
