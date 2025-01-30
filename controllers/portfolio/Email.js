@@ -12,7 +12,7 @@ const sendEmail = async(req,res) => {
     });
     const send = async() => {
         const info = await transporter.sendMail({
-            from:`selvaprasanth.tech <${process.env.EMAIL_USER}>`,
+            from:`prasanth.software <${process.env.EMAIL_USER}>`,
             to:`prasanthsamy61@gmail.com, ${process.env.EMAIL_USER}`,
             subject:`Client mail: "${subject}"`,
             html:`
