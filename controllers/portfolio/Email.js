@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const { body } = require('./utils/EmailTemplate');
+const path = require('path');
 const sendEmail = async(req,res) => {
     const {name,email,subject,message} = await req.body;
     const transporter = nodemailer.createTransport({
@@ -13,19 +15,14 @@ const sendEmail = async(req,res) => {
     const send = async() => {
         const info = await transporter.sendMail({
             from:`prasanth.software <${process.env.EMAIL_USER}>`,
-            to:`prasanthsamy61@gmail.com, ${process.env.EMAIL_USER}`,
+            to:`prasanthsamy61@gmail.com, ${process.env.EMAIL_RECEIVER}`,
             subject:`Client mail: "${subject}"`,
-            html:`
-                <body style="background-color: #0b1223; box-sizing: border-box; padding: 0; margin: 0;">
-                    <div style="font-family: sans-serif; padding: 2.5% 5%; font-size: 1rem; line-height: 1.5rem; color: #ffffff;">
-                        <div style="background-color: #162033; padding: 2rem 1.5rem; margin-bottom: 2rem; box-shadow: rgba(255, 255, 255, 0.02) 0px 1px 3px 0px, rgba(197, 226, 255, 0.15) 0px 0px 0px 1px; border-radius: .5rem;">
-                            <p><a href="https://selvaprasanth.tech" style="text-decoration: none; font-size: 1.25rem; text-transform: uppercase; font-weight: 600; color: #72e2ae;">Selvaprasanth.tech</a></p>
-                        </div>
-                        <p style="text-transform: capitalize;"><strong>Name: </strong>${name}</p>
-                        <p><strong>Email: </strong><a style="text-decoration: none; color: #72e2ae; font-weight: 500; text-transform: lowercase;" href="mailto:${email}" target="_blank" rel="noreferrer noopener">${email}</a></p>
-                        <p style="text-align: justify;">${message}</p>
-                    </div>
-                </body>`
+            html:body(name,email,message),
+            attachments:[{
+                filename:'logo.png',
+                path:path.join(__dirname,'utils','assets/logo.png'),
+                cid:'myLogo'
+            }]
         });
         return info.messageId;
     }
