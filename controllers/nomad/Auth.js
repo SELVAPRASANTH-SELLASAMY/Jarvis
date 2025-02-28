@@ -1,6 +1,7 @@
 const userModel = require('../../models/nomad/Signup');
-const { hash } = require('bcrypt');
-const { disConnect } = require('../db');
+const { hash, compare } = require('bcrypt');
+const { connect, disConnect } = require('../db');
+const jwt = require('jsonwebtoken');
 
 const generatePassword = () => {
     const lowerCases = "abcdefghijklmnopqrstuvwxyz";
@@ -42,4 +43,40 @@ const handleSignUp = async(req,res) => {
     }
 }
 
-module.exports = { handleSignUp };
+const handleSignIn = async(req,res) => {
+    try{
+        const {email, password} = req.body;
+        await connect('nomad');
+        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1}).lean();
+        if(user){
+            const validatePassword = await compare(password,user.password);
+            if(validatePassword){
+                const token = jwt.sign(user,process.env.SECRET_KEY,{
+                    expiresIn: "2h"
+                });
+
+                return res.status(200).cookie("token",token,{
+                    maxAge: 1000 * 60 * 60 * 2, //ms * s * m * h
+                    path: "/",
+                    secure: false,
+                    httpOnly: true
+                }).send();
+            }
+            else{
+                return res.status(400).send("Invalid password");
+            }
+        }
+        else{
+            return res.status(404).send("User not found");
+        }
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+    finally{
+        await disConnect();
+    }
+}
+
+module.exports = { handleSignUp, handleSignIn };

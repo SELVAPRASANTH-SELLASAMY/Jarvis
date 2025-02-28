@@ -17,9 +17,12 @@ const Schema = mongoose.Schema(
                 message: "Invalid Email"
             }
         },
+        role:{
+            type:String,
+            default:'user'
+        },
         approved:{
             type:Boolean,
-            required:true,
             default:false
         },
         password:{
