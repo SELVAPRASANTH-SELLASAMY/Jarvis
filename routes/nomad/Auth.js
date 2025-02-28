@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { handleSignUp } = require('../../controllers/nomad/Auth');
-router.post('/signup',handleSignUp);
+const { isEmailExists } = require('../../middlewares/Auth');
+router.post('/signup',isEmailExists,handleSignUp);
 module.exports = router;

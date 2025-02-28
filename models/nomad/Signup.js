@@ -5,7 +5,7 @@ const Schema = mongoose.Schema(
             type:String,
             required:[true,"Name can't be empty"],
             validate:{
-                validator: (value) => /^[A-Za-z_ ]{5,10}$/.test(value),
+                validator: (value) => /^[A-Za-z_ ]{5,20}$/.test(value),
                 message: "Invalid Name"
             }
         },
