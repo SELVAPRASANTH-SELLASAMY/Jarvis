@@ -1,4 +1,4 @@
-const userModel = require('../../models/nomad/Signup');
+const userModel = require('../../models/nomad/User');
 const { hash, compare } = require('bcrypt');
 const { connect, disConnect } = require('../db');
 const jwt = require('jsonwebtoken');

@@ -1,5 +1,5 @@
 const { connect, disConnect } = require('../controllers/db');
-const userModel = require('../models/nomad/Signup');
+const userModel = require('../models/nomad/User');
 const jwt = require('jsonwebtoken');
 const isEmailExists = async(req,res,next) => {
     try{
