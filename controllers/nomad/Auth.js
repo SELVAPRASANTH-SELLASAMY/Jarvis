@@ -47,11 +47,12 @@ const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
         await connect('nomad');
-        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1}).lean();
+        const user = await userModel.findOne({email,approved:true},{role:1,password:1}).lean();
+        console.log(user);
         if(user){
             const validatePassword = await compare(password,user.password);
             if(validatePassword){
-                const token = jwt.sign(user,process.env.SECRET_KEY,{
+                const token = jwt.sign({_id: user._id, role: user.role},process.env.SECRET_KEY,{
                     expiresIn: "2h"
                 });
 
