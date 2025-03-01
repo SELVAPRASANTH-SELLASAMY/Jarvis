@@ -79,4 +79,15 @@ const handleSignIn = async(req,res) => {
     }
 }
 
-module.exports = { handleSignUp, handleSignIn };
+const handleSignOut = (_,res) => {
+    return res.status(200).clearCookie("token",{
+        secure: false,
+        httpOnly: true
+    }).send();
+}
+
+const checkAuth = async(_,res) => {
+    return res.status(200).json({authenticated: true});
+}
+
+module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth };

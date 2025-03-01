@@ -9,7 +9,22 @@ const nomadAuth = require('./routes/nomad/Auth');
 dotenv.config();
 const App = express();
 App.use(bodyparser.json({limit:'50mb'}));
-App.use(cors());
+const AllowedOrigins = [
+    "http://localhost:3000"
+];
+App.use(
+    cors({
+        credentials: true,
+        origin: (origin,cb) => {
+            if(!origin || AllowedOrigins.includes(origin)){
+                cb(null,origin);
+            }
+            else{
+                cb(new Error(`Request from origin ${origin} was blocked by CORS`));
+            }
+        }
+    })
+);
 App.use(express.json());
 App.use(cookieParser());
 App.use('/portfolio',routes);
