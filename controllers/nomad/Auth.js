@@ -47,8 +47,7 @@ const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
         await connect('nomad');
-        const user = await userModel.findOne({email,approved:true},{role:1,password:1}).lean();
-        console.log(user);
+        const user = await userModel.findOne({email,approved:true},{role:1,password:1});
         if(user){
             const validatePassword = await compare(password,user.password);
             if(validatePassword){
