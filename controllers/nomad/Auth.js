@@ -47,7 +47,7 @@ const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
         await connect('nomad');
-        const user = await userModel.findOne({email,approved:true},{role:1,password:1});
+        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1});
         if(user){
             const validatePassword = await compare(password,user.password);
             if(validatePassword){
@@ -60,7 +60,13 @@ const handleSignIn = async(req,res) => {
                     path: "/",
                     secure: false,
                     httpOnly: true
-                }).send();
+                })
+                .json({
+                    user:{
+                        name: user.name,
+                        email: email
+                    }
+                });
             }
             else{
                 return res.status(400).send("Invalid password");
