@@ -17,6 +17,10 @@ const Schema = mongoose.Schema(
                 message: "Invalid Email"
             }
         },
+        image:{
+            type:String,
+            default:null
+        },
         role:{
             type:String,
             default:'user'

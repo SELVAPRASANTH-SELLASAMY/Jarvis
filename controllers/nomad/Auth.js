@@ -47,7 +47,7 @@ const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
         await connect('nomad');
-        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1});
+        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1,image:1});
         if(user){
             const validatePassword = await compare(password,user.password);
             if(validatePassword){
@@ -64,7 +64,8 @@ const handleSignIn = async(req,res) => {
                 .json({
                     user:{
                         name: user.name,
-                        email: email
+                        email: email,
+                        image: user.image
                     }
                 });
             }
