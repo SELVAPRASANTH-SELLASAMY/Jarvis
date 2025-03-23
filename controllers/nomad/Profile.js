@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const userModel = require('../../models/nomad/User');
 
-const desiredPath = path.join(__dirname,'../../uploads/nomad');
+const desiredPath = path.join(__dirname,'../../uploads/nomad/');
 if(!fs.existsSync(desiredPath)){
     fs.mkdirSync(desiredPath,{recursive: true});
 }
@@ -25,7 +25,11 @@ const handleProfileUpdate = async(req,res) => {
     try {
         const { userId } = req;
         const fields = req.body;
-        if(req.file) fields.image = desiredPath + req.file.filename;
+        if(req.file) {
+            const splitedPath = desiredPath.split(":");
+            fields.image = splitedPath[0].length > 3 ? desiredPath : "http://localhost:3001/uploads/nomad/";
+            fields.image += req.file.filename;
+        }
         const update = await userModel.updateOne({_id:userId},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
             return res.status(400).send("Couldn't update the details");

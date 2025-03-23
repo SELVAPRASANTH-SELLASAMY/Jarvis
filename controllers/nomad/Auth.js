@@ -47,11 +47,11 @@ const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
         await connect('nomad');
-        const user = await userModel.findOne({email,approved:true},{name:1,role:1,password:1,image:1});
+        const user = await userModel.findOne({email,approved:true},{password:1});
         if(user){
             const validatePassword = await compare(password,user.password);
             if(validatePassword){
-                const token = jwt.sign({_id: user._id, role: user.role},process.env.SECRET_KEY,{
+                const token = jwt.sign({_id: user._id},process.env.SECRET_KEY,{
                     expiresIn: "2h"
                 });
 
@@ -61,13 +61,7 @@ const handleSignIn = async(req,res) => {
                     secure: false,
                     httpOnly: true
                 })
-                .json({
-                    user:{
-                        name: user.name,
-                        email: email,
-                        image: user.image
-                    }
-                });
+                .send();
             }
             else{
                 return res.status(400).send("Invalid password");
@@ -93,8 +87,22 @@ const handleSignOut = (_,res) => {
     }).send();
 }
 
-const checkAuth = async(_,res) => {
-    return res.status(200).json({authenticated: true});
+const checkAuth = async(req,res) => {
+    try{
+        const userId = req.userId;
+        const userData = await userModel.findOne({_id: userId, approved: true},{_id: 0, name: 1, email: 1, image: 1});
+        return res.status(200).json({
+            authenticated: true,
+            user:userData
+        });
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+    finally{
+        await disConnect();
+    }
 }
 
 module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth };

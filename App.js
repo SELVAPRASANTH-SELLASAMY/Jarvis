@@ -33,10 +33,11 @@ App.use('/nomad',nomadAuth);
 App.use('/nomad',nomadProfile);
 App.use('/nomad/blog',nomadBlog);
 App.use(express.static('views'));
+App.use('/uploads',express.static('./uploads'));
 const port = process.env.PORT;
 App.listen(port,()=>{
     console.log(`API Jarvis Awaked at port ${port}...http://localhost:3001/`);
 });
-App.get("/",(_,res)=>{
+App.get('/',(_,res)=>{
     res.sendFile(path.join(__dirname,'/views/index.html'));
 });

@@ -48,7 +48,6 @@ const isAuthenticated = async(req,res,next) => {
         }
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    //FIXME: Wherever the auth protection is used there no need to connect the db again
 }
 
 module.exports = { isEmailExists, isAuthenticated };
