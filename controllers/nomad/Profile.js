@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const userModel = require('../../models/nomad/User');
 
-const desiredPath = path.join(__dirname,'../../uploads/nomad/');
+const desiredPath = './uploads/nomad/';
 if(!fs.existsSync(desiredPath)){
     fs.mkdirSync(desiredPath,{recursive: true});
 }
@@ -21,14 +21,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage});
 
+const handleStaleAvatar = async(userId) => {
+    const { image } = await userModel.findOne({_id:userId},{_id:0,image:1});
+    if(image && fs.existsSync(path.join(__dirname,"../..",image))){
+        fs.promises.unlink(image);
+    }
+}
+
 const handleProfileUpdate = async(req,res) => {
     try {
         const { userId } = req;
         const fields = req.body;
-        if(req.file) {
-            const splitedPath = desiredPath.split(":");
-            fields.image = splitedPath[0].length > 3 ? desiredPath : "http://localhost:3001/uploads/nomad/";
-            fields.image += req.file.filename;
+        if(req.file || fields?.image == 'null') {
+            handleStaleAvatar(userId);
+            fields.image = fields.image == 'null' ? null : req.file.path;
         }
         const update = await userModel.updateOne({_id:userId},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
