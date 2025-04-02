@@ -105,4 +105,16 @@ const checkAuth = async(req,res) => {
     }
 }
 
-module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth };
+const getUsers = async(req,res) => {
+    try{
+        const { userId } = req;
+        const users = await userModel.find({_id: {$ne: userId}},{name: 1,email: 1,approved: 1});
+        return res.status(200).json({users});
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+}
+
+module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers };
