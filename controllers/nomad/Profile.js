@@ -2,6 +2,7 @@ const { disConnect } = require("../db");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { hash, compare } = require('bcrypt');
 const userModel = require('../../models/nomad/User');
 
 const desiredPath = './uploads/nomad/';
@@ -51,4 +52,31 @@ const handleProfileUpdate = async(req,res) => {
     }
 }
 
-module.exports = { upload, handleProfileUpdate };
+const handlePasswordUpdate = async(req,res) => {
+    try{
+        const { userId } = req;
+        const { password, newPassword, confirmPassword } = req.body;
+        const old = await userModel.findOne({_id:userId},{_id:0,password:1});
+        if(await compare(password,old.password)){
+            if(newPassword === confirmPassword){
+                const hashedPassword = await hash(newPassword,10);
+                const update = await userModel.updateOne({_id:userId},{$set:{password:hashedPassword}},{runValidators:true});
+                if(update.modifiedCount <= 0){
+                    return res.status(400).send("Couldn't update password");
+                }
+                return res.status(200).send("Password updated successfully");
+            }
+            return res.status(400).send("Password's doesn't match");
+        }
+        return res.status(401).send("Invalid password");
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+    finally{
+        await disConnect();
+    }
+}
+
+module.exports = { upload, handleProfileUpdate, handlePasswordUpdate };
