@@ -117,4 +117,30 @@ const getUsers = async(req,res) => {
     }
 }
 
-module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers };
+const handleApproval = async(req,res) => {
+    try {
+        const { userId } = req;
+        const user = await userModel.findOne({_id: userId, role: "admin"},{_id:1});
+        if(user.length <= 0){
+            return res.status(401).send("Unauthorised access");
+        }
+        const { id } = req.body;
+        const update = await userModel.findByIdAndUpdate({_id: id},[{
+                $set: {
+                    approved: {
+                        $not: "$approved"
+                    }
+                }
+            }],
+            {new: true}
+        );
+        if(update) return res.status(200).send(`Access ${update.approved ? "granted" : "removed"} to ${update.name}`);
+        return res.status(400).send("Error while granting access. try after sometime");
+    } 
+    catch (err) {
+        console.log(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+}
+
+module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, handleApproval };
