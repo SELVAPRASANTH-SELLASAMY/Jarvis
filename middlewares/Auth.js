@@ -8,7 +8,7 @@ const isEmailExists = async(req,res,next) => {
         const user = await userModel.findOne({email:email});
         if(user){
             await disConnect();
-            return res.status(400).send("An account with this email already exists");
+            return res.status(400).json({message: "An account with this email already exists"});
         }
         next();
     }

@@ -39,9 +39,9 @@ const handleProfileUpdate = async(req,res) => {
         }
         const update = await userModel.updateOne({_id:userId},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
-            return res.status(400).send("Couldn't update the details");
+            return res.status(400).json({message: "Couldn't update the details"});
         }
-        return res.status(200).send("Details updated successfully");
+        return res.status(200).json({message: "Details updated successfully"});
     } 
     catch(err) {
         console.error(err);
@@ -62,13 +62,13 @@ const handlePasswordUpdate = async(req,res) => {
                 const hashedPassword = await hash(newPassword,10);
                 const update = await userModel.updateOne({_id:userId},{$set:{password:hashedPassword}},{runValidators:true});
                 if(update.modifiedCount <= 0){
-                    return res.status(400).send("Couldn't update password");
+                    return res.status(400).json({message: "Couldn't update password"});
                 }
-                return res.status(200).send("Password updated successfully");
+                return res.status(200).json({message: "Password updated successfully"});
             }
-            return res.status(400).send("Password's doesn't match");
+            return res.status(400).json({message: "Password's doesn't match"});
         }
-        return res.status(401).send("Invalid password");
+        return res.status(401).json({message: "Invalid password"});
     }
     catch(err){
         console.error(err);

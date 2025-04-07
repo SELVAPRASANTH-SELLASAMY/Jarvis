@@ -14,7 +14,8 @@ const resizeImage = async(image) => {
 const handleNewBlog = (req,res) => {
     exceptionBound(async() => {
         await blogModel.create(req.body);
-        return res.status(201).send("Blog saved successfully");
+        return res.status(201).json({message: "Blog saved successfully"});
+        //No need to return the created blog. It's a heavy data so don't send it unneccessarily.
     },res);
 }
 
@@ -22,13 +23,13 @@ const getContent = (req,res) => {
     exceptionBound(async() => {
         const id = req.query.id;
         if(!id){
-            return res.status(400).send("Bad request");
+            return res.status(400).json({message: "Bad request"});
         }
         const retrivedContent = await blogModel.findOne({_id:id},{"_id":0,"__v":0,"createdAt":0,"updatedAt":0});
         if(retrivedContent.length < 1){
-            return res.status(404).send("Resource not found");
+            return res.status(404).json({message: "Resource not found"});
         }
-        return res.status(200).send(retrivedContent);
+        return res.status(200).json({data: retrivedContent});
     },res);
 }
 
@@ -59,7 +60,7 @@ const fetchAll = (req,res) => {
                             .lean();
         const totalBlogs = await blogModel.countDocuments();
         if(retrivedBlogs.length < 1){
-            return res.status(404).send("No blog found");
+            return res.status(404).json({message: "No blog found"});
         }
         retrivedBlogs = await Promise.all(retrivedBlogs.map(async(blog) => {
             const img = getImage(blog.content);
@@ -78,13 +79,13 @@ const deleteBlog = (req,res) => {
     exceptionBound(async() => {
         const id = req.query.id;
         if(!id){
-            return res.status(400).send("Bad request");
+            return res.status(400).json({message: "Bad request"});
         }
         const deletion = await blogModel.deleteOne({_id:id});
         if(deletion.deletedCount > 0){
-            return res.status(200).send("Blog deleted successfully");
+            return res.status(200).json({message: "Blog deleted successfully"});
         }
-        return res.status(404).send("Couldn't delete the blog");
+        return res.status(404).json({message: "Couldn't delete the blog"});
     },res);
 }
 
@@ -93,13 +94,14 @@ const updateBlog = (req,res) => {
         const id = req.query.id;
         const fields = req.body;
         if(!id){
-            return res.status(400).send("Bad request");
+            return res.status(400).json({message: "Bad request"});
         }
         const update = await blogModel.updateOne({_id:id},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
-            return res.status(400).send("Couldn't update blog");
+            return res.status(400).json({message: "Couldn't update blog"});
         }
-        return res.status(200).send("Blog updated successfully");
+        return res.status(200).json({message: "Blog updated successfully"});
+        // Sending updated data back to the client is a heavier response data
     },res);
 }
 

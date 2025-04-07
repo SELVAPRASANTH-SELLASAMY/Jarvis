@@ -31,8 +31,16 @@ const handleSignUp = async(req,res) => {
         const { name,email } = req.body;
         const password = generatePassword();
         const hashedPassword = await hash(password,10);
-        await userModel.create({name,email,password:hashedPassword});
-        return res.status(201).send("Access request sent");
+        const user = await userModel.create({name,email,password:hashedPassword});
+        return res.status(201).json({
+            message: "Access request created",
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                approved: user.approved
+            }
+        });
     }
     catch(err){
         console.error(err);
@@ -64,11 +72,11 @@ const handleSignIn = async(req,res) => {
                 .send();
             }
             else{
-                return res.status(400).send("Invalid password");
+                return res.status(400).json({message: "Invalid password"});
             }
         }
         else{
-            return res.status(404).send("User not found");
+            return res.status(404).json({message: "User not found"});
         }
     }
     catch(err){
@@ -122,7 +130,7 @@ const handleApproval = async(req,res) => {
         const { userId } = req;
         const user = await userModel.findOne({_id: userId, role: "admin"},{_id:1});
         if(user.length <= 0){
-            return res.status(401).send("Unauthorised access");
+            return res.status(401).json({message: "Unauthorised access"});
         }
         const { id } = req.body;
         const update = await userModel.findByIdAndUpdate({_id: id},[{
@@ -134,8 +142,10 @@ const handleApproval = async(req,res) => {
             }],
             {new: true}
         );
-        if(update) return res.status(200).send(`Access ${update.approved ? "granted" : "removed"} to ${update.name}`);
-        return res.status(400).send("Error while granting access. try after sometime");
+        if(update){
+            return res.status(200).json({message: `Access ${update.approved ? "granted" : "removed"} to ${update.name}`});
+        }
+        return res.status(400).json({message: "Error while granting access. try after sometime"});
     } 
     catch (err) {
         console.log(err);
