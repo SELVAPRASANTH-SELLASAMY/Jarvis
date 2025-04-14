@@ -1,33 +1,9 @@
-const nodemailer = require('nodemailer');
-const { body } = require('./utils/EmailTemplate');
-const path = require('path');
-const sendEmail = async(req,res) => {
-    const {name,email,subject,message} = await req.body;
-    const transporter = nodemailer.createTransport({
-        host:process.env.MAIL_HOST,
-        port:process.env.MAIL_PORT,
-        secure:false,
-        auth:{
-            user:process.env.EMAIL_USER,
-            pass:process.env.EMAIL_AUTH_PASSWORD
-        }
-    });
-    const send = async() => {
-        const info = await transporter.sendMail({
-            from:`prasanth.software <${process.env.EMAIL_USER}>`,
-            to:`prasanthsamy61@gmail.com, ${process.env.EMAIL_RECEIVER}`,
-            subject:`Client mail: "${subject}"`,
-            html:body(name,email,message),
-            attachments:[{
-                filename:'logo.png',
-                path:path.join(__dirname,'utils','assets/logo.png'),
-                cid:'myLogo'
-            }]
-        });
-        return info.messageId;
-    }
+const send = require('../../middlewares/Email/Email');
+const sendMessage = async(req,res) => {
+    const { name, email, subject, message } = await req.body;
+    const receiver = process.env.EMAIL_RECEIVER;
     try{
-        const senderResponse = await send();
+        const senderResponse = await send({name, email, subject, message, receiver});
         if(senderResponse){
             return res.status(200).json({response:`Mail sent ${senderResponse}`});
         }
@@ -39,4 +15,4 @@ const sendEmail = async(req,res) => {
     }
 }
 
-module.exports = {sendEmail};
+module.exports = { sendMessage };
