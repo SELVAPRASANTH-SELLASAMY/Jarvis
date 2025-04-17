@@ -17,7 +17,7 @@ const send = async(params) => {
     const info = await transporter.sendMail({
         from:`prasanth.software <${process.env.EMAIL_USER}>`,
         to:`${receiver}, ${receiver}`,
-        subject:`Client mail: "${subject}"`,
+        subject: subject,
         html:body(params),
         attachments:[{
             filename:'logo.png',

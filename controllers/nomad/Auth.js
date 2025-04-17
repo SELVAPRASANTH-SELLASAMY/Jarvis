@@ -2,6 +2,7 @@ const userModel = require('../../models/nomad/User');
 const { hash, compare } = require('bcrypt');
 const { connect, disConnect } = require('../db');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../../middlewares/Email/Email');
 
 const generatePassword = () => {
     const lowerCases = "abcdefghijklmnopqrstuvwxyz";
@@ -29,9 +30,7 @@ const handleSignUp = async(req,res) => {
     //No need to connect the db it was already connected in the middleware itself.
     try{
         const { name,email } = req.body;
-        const password = generatePassword();
-        const hashedPassword = await hash(password,10);
-        const user = await userModel.create({name,email,password:hashedPassword});
+        const user = await userModel.create({name,email});
         return res.status(201).json({
             message: "Access request created",
             data: {
@@ -44,7 +43,7 @@ const handleSignUp = async(req,res) => {
     }
     catch(err){
         console.error(err);
-        return res.status(500).json({message:"Something went wrong",error:err});
+        return res.status(400).json({message:"Something went wrong",error:err});
     }
     finally{
         await disConnect();
@@ -133,8 +132,11 @@ const handleApproval = async(req,res) => {
             return res.status(401).json({message: "Unauthorised access"});
         }
         const { id } = req.body;
+        const password = generatePassword();
+        const hashedPassword = await hash(password,10);
         const update = await userModel.findByIdAndUpdate({_id: id},[{
                 $set: {
+                    password: hashedPassword,
                     approved: {
                         $not: "$approved"
                     }
@@ -143,6 +145,7 @@ const handleApproval = async(req,res) => {
             {new: true}
         );
         if(update){
+            sendEmail({name: update.name, password: password, receiver: update.email, type:"password", subject:"Nomad login credentials"});
             return res.status(200).json({message: `Access ${update.approved ? "granted" : "removed"} to ${update.name}`});
         }
         return res.status(400).json({message: "Error while granting access. try after sometime"});

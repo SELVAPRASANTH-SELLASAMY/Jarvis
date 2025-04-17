@@ -10,7 +10,7 @@ const body = (params) => {
             case "otp":
                 const { otp } = params;
                 return otpTmp(name,otp);
-            case "passwprd":
+            case "password":
                 const { password } = params;
                 return PasswordTmp(name,password);
             default:
