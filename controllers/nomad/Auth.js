@@ -122,6 +122,30 @@ const getUsers = async(req,res) => {
         console.log(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
+    finally{
+        await disConnect();
+    }
+}
+
+const removeUsers = async(req,res) => {
+    try{
+        const { users } = req.body;
+        if(users.length <= 0) return res.status(400).json({message: "No users were selected"});
+        const deletion = await userModel.deleteMany({
+            _id: {$in: users}
+        });
+        if(deletion.deletedCount > 0){
+            return res.status(200).json({message: `${deletion.deletedCount} user${deletion.deletedCount > 1 ? "'s" : ""} removed`});
+        }
+        return res.status(400).json({message: "Error while trying to delete users"});
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+    finally{
+        await disConnect();
+    }
 }
 
 const handleApproval = async(req,res) => {
@@ -163,6 +187,9 @@ const handleApproval = async(req,res) => {
         console.log(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
+    finally{
+        await disConnect();
+    }
 }
 
-module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, handleApproval };
+module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, removeUsers, handleApproval };

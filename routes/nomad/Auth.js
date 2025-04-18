@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, handleApproval } = require('../../controllers/nomad/Auth');
+const { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, removeUsers, handleApproval } = require('../../controllers/nomad/Auth');
 const { isEmailExists, isAuthenticated } = require('../../middlewares/Auth');
 router.post('/signup',isEmailExists,handleSignUp);
 router.post('/signin',handleSignIn);
 router.post('/signout',handleSignOut);
 router.get('/check-auth',isAuthenticated,checkAuth);
 router.get('/getUsers',isAuthenticated,getUsers);
+router.delete('/removeUsers',isAuthenticated,removeUsers);
 router.patch('/approve',isAuthenticated,handleApproval);
 module.exports = router;
