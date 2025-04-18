@@ -38,8 +38,7 @@ const Schema = mongoose.Schema(
                     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,}$/.test(value);
                 },
                 message: "Password doesn't met the requiredd criteria"
-            },
-            default:""
+            }
         }
     },
     {

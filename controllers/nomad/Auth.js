@@ -133,12 +133,21 @@ const handleApproval = async(req,res) => {
         }
         const { id } = req.body;
         const password = generatePassword();
-        const hashedPassword = await hash(password,10);
         const update = await userModel.findByIdAndUpdate({_id: id},[{
                 $set: {
-                    password: hashedPassword,
                     approved: {
                         $not: "$approved"
+                    },
+                    password: {
+                        $cond: {
+                            if: {
+                                $eq:["$approved", false]
+                            },
+                            then: {
+                                $literal: await hash(password,10)
+                            },
+                            else: null
+                        }
                     }
                 }
             }],
