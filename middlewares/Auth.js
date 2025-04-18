@@ -23,21 +23,22 @@ const isAuthenticated = async(req,res,next) => {
     try {
         const { token } = req.cookies;
         if(!token){
-            return res.status(401).json({authenticated: false,message: "UnAuthorized access"});
+            return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
 
         const decData = jwt.verify(token,process.env.SECRET_KEY);
         if(!decData){
-            return res.status(401).json({authenticated: false,message: "UnAuthorized access"});
+            return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
 
         await connect('nomad');
-        const user = await userModel.findOne({_id: decData._id,approved: true},{_id: 1});
+        const user = await userModel.findOne({_id: decData._id,approved: true},{_id: 1, role: 1});
         if(!user){
             await disConnect();
-            return res.status(401).json({authenticated: false,message: "UnAuthorized access"});
+            return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
         req.userId = user._id;
+        req.role = user.role;
         return next();
     } 
     catch(err){

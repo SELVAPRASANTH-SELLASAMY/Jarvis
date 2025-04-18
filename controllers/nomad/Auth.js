@@ -98,6 +98,7 @@ const checkAuth = async(req,res) => {
     try{
         const userId = req.userId;
         const userData = await userModel.findOne({_id: userId, approved: true},{_id: 0, name: 1, email: 1, image: 1});
+        userData.role = req.role;
         return res.status(200).json({
             authenticated: true,
             user:userData
@@ -114,8 +115,15 @@ const checkAuth = async(req,res) => {
 
 const getUsers = async(req,res) => {
     try{
-        const { userId } = req;
-        const users = await userModel.find({_id: {$ne: userId}},{name: 1,email: 1,approved: 1});
+        const { userId, role } = req;
+        if(role !== "admin") return res.status(403).json({message: "Unauthorised access"});
+        const users = await userModel.find({
+                _id: {
+                    $nin: [userId, process.env.API_OWNER]
+                }
+            },
+            {name: 1,email: 1,approved: 1}
+        );
         return res.status(200).json({users});
     }
     catch(err){
@@ -129,10 +137,12 @@ const getUsers = async(req,res) => {
 
 const removeUsers = async(req,res) => {
     try{
+        const { role } = req;
+        if(role !== "admin") return res.status(403).json({message: "Unauthorised access"});
         const { users } = req.body;
         if(users.length <= 0) return res.status(400).json({message: "No users were selected"});
         const deletion = await userModel.deleteMany({
-            _id: {$in: users}
+            _id: {$in: users.filter(id => id !== process.env.API_OWNER)}
         });
         if(deletion.deletedCount > 0){
             return res.status(200).json({message: `${deletion.deletedCount} user${deletion.deletedCount > 1 ? "'s" : ""} removed`});
