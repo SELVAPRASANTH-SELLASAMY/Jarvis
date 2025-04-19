@@ -120,7 +120,7 @@ const getUsers = async(req,res) => {
         if(role !== "admin") return res.status(403).json({message: "Unauthorised access"});
         const users = await userModel.find({
                 _id: {
-                    $nin: [userId, process.env.API_OWNER]
+                    $nin: [userId, process.env.PLATFORM_OWNER]
                 }
             },
             {name: 1,email: 1,role: 1,approved: 1}
@@ -143,7 +143,7 @@ const removeUsers = async(req,res) => {
         const { users } = req.body;
         if(users.length <= 0) return res.status(400).json({message: "No users were selected"});
         const deletion = await userModel.deleteMany({
-            _id: {$in: users.filter(id => id !== process.env.API_OWNER)}
+            _id: {$in: users.filter(id => id !== process.env.PLATFORM_OWNER)}
         });
         if(deletion.deletedCount > 0){
             return res.status(200).json({message: `${deletion.deletedCount} user${deletion.deletedCount > 1 ? "'s" : ""} removed`});
