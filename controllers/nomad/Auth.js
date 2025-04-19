@@ -203,4 +203,35 @@ const handleApproval = async(req,res) => {
     }
 }
 
-module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, removeUsers, handleApproval };
+const handlePasswordReset = async(req,res) => {
+    try {
+        const { tmp } = req.cookies;
+        const decData = jwt.verify(tmp,process.env.SECRET_KEY);
+        if(!decData){
+            return res.status(401).json({authenticated: false,message: "Authentication failed"});
+        }
+        const { email, otp } = decData;
+        const key = `otp:${email}`;
+        const storedOtp = await client.get(key);
+        const {newPassword,confirmPassword} = req.body;
+        if((otp === storedOtp) && (newPassword === confirmPassword)){
+            const hashedPassword = await hash(newPassword,10);
+            const update = await userModel.updateOne({email: email, approved: true},{
+                $set: {
+                    password: hashedPassword
+                }
+            });
+            if(update.modifiedCount > 0){
+                return res.status(200).json({message: "Password changed successfully"});
+            }
+            return res.status(200).json({message: "Couldn't change password"});
+        }
+        return res.status(200).json({message: "Authentication failed"});
+    } 
+    catch (err){
+        console.log(err);
+        return res.status(500).json({message:"Something went wrong",error:err.message});
+    }
+}
+
+module.exports = { handleSignUp, handleSignIn, handleSignOut, checkAuth, getUsers, removeUsers, handleApproval, handlePasswordReset };
