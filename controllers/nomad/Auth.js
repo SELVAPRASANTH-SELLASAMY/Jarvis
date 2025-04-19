@@ -29,14 +29,15 @@ const generatePassword = () => {
 const handleSignUp = async(req,res) => {
     //No need to connect the db it was already connected in the middleware itself.
     try{
-        const { name,email } = req.body;
-        const user = await userModel.create({name,email});
+        const { name,email,role } = req.body;
+        const user = await userModel.create({name,email,role});
         return res.status(201).json({
             message: "Access request created",
             data: {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                role: user.role,
                 approved: user.approved
             }
         });
@@ -122,7 +123,7 @@ const getUsers = async(req,res) => {
                     $nin: [userId, process.env.API_OWNER]
                 }
             },
-            {name: 1,email: 1,approved: 1}
+            {name: 1,email: 1,role: 1,approved: 1}
         );
         return res.status(200).json({users});
     }
