@@ -13,21 +13,22 @@ const resizeImage = async(image) => {
 
 const handleNewBlog = (req,res) => {
     exceptionBound(async() => {
-        await blogModel.create(req.body);
+        const { userId } = req;
+        await blogModel.create({...req.body, owner: userId});
         return res.status(201).json({message: "Blog saved successfully"});
-        //No need to return the created blog. It's a heavy data so don't send it unneccessarily.
     },res);
 }
 
 const getContent = (req,res) => {
     exceptionBound(async() => {
+        const { userId } = req;
         const id = req.query.id;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
-        const retrivedContent = await blogModel.findOne({_id:id},{"_id":0,"__v":0,"createdAt":0,"updatedAt":0});
-        if(retrivedContent.length < 1){
-            return res.status(404).json({message: "Resource not found"});
+        const retrivedContent = await blogModel.findOne({_id:id,owner:userId},{"_id":0,"__v":0,"createdAt":0,"updatedAt":0});
+        if(!retrivedContent){
+            return res.status(404).json({message: "Requested content not found"});
         }
         return res.status(200).json({data: retrivedContent});
     },res);
@@ -41,6 +42,7 @@ const fetchAll = (req,res) => {
             return match ? match[1] : null;
         };
 
+        const { userId } = req;
         const { page, sortby, ascending, category, search } = req.query;
         const Limit = 5;
         const Skip = ((page - 1) * Limit);
@@ -50,7 +52,8 @@ const fetchAll = (req,res) => {
 
         const filters = {
             ...categoryFilter,
-            ...searchFilter
+            ...searchFilter,
+            owner: userId
         };
 
         let retrivedBlogs = await blogModel.find(filters, {title:1,content:1,createdAt:1,category:1})
@@ -77,11 +80,12 @@ const fetchAll = (req,res) => {
 
 const deleteBlog = (req,res) => {
     exceptionBound(async() => {
+        const { userId } = req;
         const id = req.query.id;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
-        const deletion = await blogModel.deleteOne({_id:id});
+        const deletion = await blogModel.deleteOne({_id:id,owner:userId});
         if(deletion.deletedCount > 0){
             return res.status(200).json({message: "Blog deleted successfully"});
         }
@@ -91,12 +95,13 @@ const deleteBlog = (req,res) => {
 
 const updateBlog = (req,res) => {
     exceptionBound(async() => {
+        const { userId } = req;
         const id = req.query.id;
         const fields = req.body;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
-        const update = await blogModel.updateOne({_id:id},{$set:fields},{runValidators:true});
+        const update = await blogModel.updateOne({_id:id,owner:userId},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
             return res.status(400).json({message: "Couldn't update blog"});
         }

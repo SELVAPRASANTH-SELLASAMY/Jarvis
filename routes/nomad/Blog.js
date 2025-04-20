@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { handleNewBlog, fetchAll, getContent, deleteBlog, updateBlog } = require("../../controllers/nomad/Blog");
-router.post('/add',handleNewBlog);
-router.get('/fetch',fetchAll);
-router.get('/getcontent',getContent);
-router.delete('/delete',deleteBlog);
-router.patch('/update',updateBlog);
+const { isAuthenticated } = require('../../middlewares/Auth');
+router.post('/add',isAuthenticated,handleNewBlog);
+router.get('/fetch',isAuthenticated,fetchAll);
+router.get('/getcontent',isAuthenticated,getContent);
+router.delete('/delete',isAuthenticated,deleteBlog);
+router.patch('/update',isAuthenticated,updateBlog);
 module.exports = router;

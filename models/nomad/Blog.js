@@ -24,6 +24,11 @@ const BlogSchema = mongoose.Schema(
         category:{
             type:String,
             default:"general"
+        },
+        owner:{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'users',
+            required: true
         }
     },
     {
