@@ -3,6 +3,7 @@ const { hash, compare } = require('bcrypt');
 const { connect, disConnect } = require('../db');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../../middlewares/Email/Email');
+const client = require('../../middlewares/RedisClient');
 
 const generatePassword = () => {
     const lowerCases = "abcdefghijklmnopqrstuvwxyz";
@@ -216,6 +217,7 @@ const handlePasswordReset = async(req,res) => {
         const {newPassword,confirmPassword} = req.body;
         if((otp === storedOtp) && (newPassword === confirmPassword)){
             const hashedPassword = await hash(newPassword,10);
+            await connect('nomad');
             const update = await userModel.updateOne({email: email, approved: true},{
                 $set: {
                     password: hashedPassword
@@ -224,13 +226,15 @@ const handlePasswordReset = async(req,res) => {
             if(update.modifiedCount > 0){
                 return res.status(200).json({message: "Password changed successfully"});
             }
-            return res.status(200).json({message: "Couldn't change password"});
         }
-        return res.status(200).json({message: "Authentication failed"});
+        return res.status(200).json({message: "Couldn't change password"});
     } 
     catch (err){
         console.log(err);
-        return res.status(500).json({message:"Something went wrong",error:err.message});
+        return res.status(500).json({message:"Couldn't change password",error:err.message});
+    }
+    finally{
+        await disConnect();
     }
 }
 

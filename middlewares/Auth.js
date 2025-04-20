@@ -2,7 +2,7 @@ const { connect, disConnect } = require('../controllers/db');
 const userModel = require('../models/nomad/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('./Email/Email');
-const redis = require('redis');
+const client = require('./RedisClient');
 const isEmailExists = async(req,res,next) => {
     try{
         const { email } = req.body;
@@ -50,21 +50,6 @@ const isAuthenticated = async(req,res,next) => {
     }
 }
 
-const client = redis.createClient();
-client.connect()
-.then(() => {
-    console.log("Redis client ready...");
-})
-.catch((err) => {
-    console.error("Redis client failed to connect "+err);
-});
-
-process.on("SIGINT",async() => {
-    await client.quit();
-    console.log("Redis client disconnected...");
-    process.exit(0);
-});
-
 const generateOTP = async(req,res) => {
     try {
         const { email } = req.body;
@@ -111,7 +96,7 @@ const validateOTP = async(req,res) => {
     } 
     catch (err){
         console.error(err);
-        return res.status(500).json({message:"Something went wrong",error:err.message});
+        return res.status(500).json({message:"Invalid OTP",error:err.message});
     }
 }
 
