@@ -12,6 +12,7 @@ const Schema = mongoose.Schema(
         email:{
             type:String,
             unique: true,
+            lowercase: true,
             required:[true,"Email can't be empty"],
             validate:{
                 validator: (value) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value),

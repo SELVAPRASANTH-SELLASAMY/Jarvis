@@ -224,10 +224,11 @@ const handlePasswordReset = async(req,res) => {
                 }
             });
             if(update.modifiedCount > 0){
+                await client.del(key);
                 return res.status(200).json({message: "Password changed successfully"});
             }
         }
-        return res.status(200).json({message: "Couldn't change password"});
+        return res.status(400).json({message: "Couldn't change password"});
     } 
     catch (err){
         console.log(err);
