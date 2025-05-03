@@ -126,6 +126,7 @@ const getUsers = async(req,res) => {
             },
             {name: 1,email: 1,role: 1,approved: 1}
         );
+        if(users.length < 1) return res.status(404).json({message: "No users found"});
         return res.status(200).json({users});
     }
     catch(err){
