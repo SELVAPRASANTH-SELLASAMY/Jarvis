@@ -25,6 +25,11 @@ const isAuthenticated = async(req,res,next) => {
     try {
         const { token } = req.cookies;
 
+        if(!token){
+            await disConnect();
+            return res.status(401).json({authenticated: false,message: "Authentication failed"});
+        }
+
         const decData = jwt.verify(token,process.env.SECRET_KEY);
         if(!decData){
             return res.status(401).json({authenticated: false,message: "Authentication failed"});
