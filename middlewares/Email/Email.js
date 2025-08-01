@@ -14,18 +14,24 @@ const send = async(params) => {
     });
 
     const { receiver, subject } = params;
-    const info = await transporter.sendMail({
-        from:`prasanth.software <${process.env.EMAIL_USER}>`,
-        to:`${receiver}, ${receiver}`,
-        subject: subject,
-        html:body(params),
-        attachments:[{
-            filename:'logo.png',
-            path:path.join(__dirname,'assets/logo.png'),
-            cid:'myLogo'
-        }]
-    });
-    return info.messageId;
+    try{
+        const info = await transporter.sendMail({
+            from:`prasanth.software <${process.env.EMAIL_USER}>`,
+            to:`${receiver}, ${receiver}`,
+            subject: subject,
+            html:body(params),
+            attachments:[{
+                filename:'logo.png',
+                path:path.join(__dirname,'assets/logo.png'),
+                cid:'myLogo'
+            }]
+        });
+        return info.messageId;
+    }
+    catch(err){
+        console.error(err);
+        throw err;
+    }
 }
 
 module.exports = send;

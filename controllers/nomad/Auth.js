@@ -191,7 +191,9 @@ const handleApproval = async(req,res) => {
             {new: true}
         );
         if(update){
-            sendEmail({name: update.name, password: password, receiver: update.email, type:"password", subject:"Nomad login credentials"});
+            if(update.approved){
+                await sendEmail({name: update.name, password: password, receiver: update.email, type:"password", subject:"Nomad login credentials"});
+            }
             return res.status(200).json({message: `Access ${update.approved ? "granted" : "removed"} to ${update.name}`});
         }
         return res.status(400).json({message: "Error while granting access. try after sometime"});
