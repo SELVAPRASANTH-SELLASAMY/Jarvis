@@ -37,11 +37,25 @@ const handleProfileUpdate = async(req,res) => {
             handleStaleAvatar(userId);
             fields.image = fields.image == 'null' ? null : req.file.path;
         }
-        const update = await userModel.updateOne({_id:userId},{$set:fields},{runValidators:true});
-        if(update.modifiedCount <= 0){
+        const update = await userModel.findByIdAndUpdate({_id:userId},{$set:fields},{
+            runValidators: true,
+            new: true,
+            projection: {
+                name: 1,
+                email: 1,
+                image: 1,
+                _id: 0
+            }
+        });
+        if(!update){
             return res.status(400).json({message: "Couldn't update the details"});
         }
-        return res.status(200).json({message: "Details updated successfully"});
+        const { name, email, image } = update;
+        return res.status(200).json({message: "Details updated successfully",data: {
+            name,
+            email,
+            image
+        }});
     } 
     catch(err) {
         console.error(err);
