@@ -47,7 +47,7 @@ const fetchAll = (req,res) => {
         const Limit = 5;
         const Skip = ((page - 1) * Limit);
 
-        const categoryFilter = category === "All" ? {} : {category:category};
+        const categoryFilter = category.toLowerCase() === "all" ? {} : {category: category.toLowerCase()};
         const searchFilter = (search.length > 3 || search.length === 0) ? {title:{$regex:search}} : {};
 
         const filters = {
@@ -110,4 +110,30 @@ const updateBlog = (req,res) => {
     },res);
 }
 
-module.exports = { handleNewBlog, getContent, fetchAll, deleteBlog, updateBlog };
+const getCategories = async(_,res) => {
+    try{
+        const categories = await blogModel.aggregate([
+            {
+                $group:{
+                    _id: null, 
+                    categories: {
+                        $addToSet: "$category"
+                    }
+                }
+            },
+            {
+                $project: {
+                    categories: 1,
+                    _id: 0
+                }
+            }
+        ]);
+        return res.status(200).json({categories: categories[0]?.categories || []});
+    }
+    catch(err){
+        console.log(err);
+        return res.status(500).json({message:"Something went wrong",error:err});
+    }
+}
+
+module.exports = { handleNewBlog, getContent, fetchAll, deleteBlog, updateBlog, getCategories };

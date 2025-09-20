@@ -4,6 +4,7 @@ const BlogSchema = mongoose.Schema(
         title:{
             type:String,
             required:[true,"can't be empty"],
+            lowercase: true,
             validate:{
                 validator: (value) => value.length > 4,
                 message: "Must be at least 5 characters long"
@@ -23,6 +24,7 @@ const BlogSchema = mongoose.Schema(
         },
         category:{
             type:String,
+            lowercase: true,
             default:"general"
         },
         owner:{
