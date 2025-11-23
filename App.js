@@ -12,7 +12,8 @@ const App = express();
 App.use(bodyparser.json({limit:'50mb'}));
 const AllowedOrigins = [
     "http://localhost:3000",
-    "https://prasanth.live"
+    "https://prasanth.live",
+    /\.prasanth\.live$/
 ];
 App.use(
     cors({
