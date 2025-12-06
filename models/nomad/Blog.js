@@ -37,5 +37,4 @@ const BlogSchema = mongoose.Schema(
         timestamps:true
     }
 );
-const BlogModel = mongoose.model('blogs',BlogSchema);
-module.exports = BlogModel;
+module.exports = BlogSchema;

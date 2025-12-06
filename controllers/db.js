@@ -1,15 +1,20 @@
 const mongoose = require('mongoose');
-const connect = async(dbName) => {
-    if(!dbName) throw {message:"Error while connecting to the database"};
-    await mongoose.connect(`${process.env.MONGO_DB_BASE_URL}${dbName}`);
-}
-const disConnect = async() => {
-    //We may use the disconnect inside the finally block. So, we must wrap this inside the try...cactch block
+
+const getConnection = (dbName) => {
+    const connections = {};
+    if(connections[dbName]) return connections[dbName];
     try{
-        await mongoose.disconnect();
+        const url = `${process.env.MONGO_DB_BASE_URL}${dbName}`;
+        const con = mongoose.createConnection(url,{
+            maxPoolSize: 10,
+            minPoolSize: 1
+        });
+        connections[dbName] = con;
+        return con;
     }
-    catch(err){
-        console.warn("Something happens while disconnecting the database");
+    catch(error){
+       console.error("Error while connecting the database\n",error);
     }
 }
-module.exports = { connect, disConnect };
+
+module.exports = { getConnection };

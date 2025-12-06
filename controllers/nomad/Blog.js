@@ -1,6 +1,6 @@
 const sharp = require('sharp');
-const exceptionBound = require('../exceptionBound');
-const blogModel = require("../../models/nomad/Blog");
+const { getConnection } = require('../db');
+const blogSchema = require("../../models/nomad/Blog");
 const resizeImage = async(image) => {
     const base64 = image.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64,"base64");
@@ -11,31 +11,43 @@ const resizeImage = async(image) => {
     return `data:image/png;base64,${stringUrl}`;
 }
 
-const handleNewBlog = (req,res) => {
-    exceptionBound(async() => {
+const handleNewBlog = async(req,res) => {
+    try{
         const { userId } = req;
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
         await blogModel.create({...req.body, owner: userId});
         return res.status(201).json({message: "Blog saved successfully"});
-    },res);
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error: err});
+    }
 }
 
-const getContent = (req,res) => {
-    exceptionBound(async() => {
+const getContent = async(req,res) => {
+    try{
         const { userId } = req;
         const id = req.query.id;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
         const retrivedContent = await blogModel.findOne({_id:id,owner:userId},{"_id":0,"__v":0,"createdAt":0,"updatedAt":0});
         if(!retrivedContent){
             return res.status(404).json({message: "Requested content not found"});
         }
         return res.status(200).json({data: retrivedContent});
-    },res);
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error: err});
+    }
 }
 
-const fetchAll = (req,res) => {
-    exceptionBound(async() => {
+const fetchAll = async(req,res) => {
+    try{
         const getImage = (content) => {
             const imgRegex = /<img[^>]+src="([^">]+)"/i;
             const match = content.match(imgRegex);
@@ -56,6 +68,9 @@ const fetchAll = (req,res) => {
             owner: userId
         };
 
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
+
         let retrivedBlogs = await blogModel.find(filters, {title:1,content:1,createdAt:1,category:1})
                             .sort({[sortby]: Number(ascending),createdAt: Number(ascending),_id:1})
                             .skip(Skip)
@@ -75,43 +90,61 @@ const fetchAll = (req,res) => {
             data: retrivedBlogs,
             hasMore: (retrivedBlogs.length >= Limit) && ((Skip + Limit) < totalBlogs)
         });
-    },res);
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error: err});
+    }
 }
 
-const deleteBlog = (req,res) => {
-    exceptionBound(async() => {
+const deleteBlog = async(req,res) => {
+    try{
         const { userId } = req;
         const id = req.query.id;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
         const deletion = await blogModel.deleteOne({_id:id,owner:userId});
         if(deletion.deletedCount > 0){
             return res.status(200).json({message: "Blog deleted successfully"});
         }
         return res.status(404).json({message: "Couldn't delete the blog"});
-    },res);
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error: err});
+    }
 }
 
-const updateBlog = (req,res) => {
-    exceptionBound(async() => {
+const updateBlog = async(req,res) => {
+    try{
         const { userId } = req;
         const id = req.query.id;
         const fields = req.body;
         if(!id){
             return res.status(400).json({message: "Bad request"});
         }
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
         const update = await blogModel.updateOne({_id:id,owner:userId},{$set:fields},{runValidators:true});
         if(update.modifiedCount <= 0){
             return res.status(400).json({message: "Couldn't update blog"});
         }
         return res.status(200).json({message: "Blog updated successfully"});
-        // Sending updated data back to the client is a heavier response data
-    },res);
+        // Sending updated data back to the client will be a heavier response
+    }
+    catch(err){
+        console.error(err);
+        return res.status(500).json({message:"Something went wrong",error: err});
+    }
 }
 
 const getCategories = async(_,res) => {
     try{
+        const db = await getConnection('nomad');
+        const blogModel = db.models.Blog || db.model("Blog",blogSchema);
         const categories = await blogModel.aggregate([
             {
                 $group:{

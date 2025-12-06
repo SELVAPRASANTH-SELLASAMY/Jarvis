@@ -1,9 +1,9 @@
-const { disConnect } = require("../db");
+const { getConnection } = require("../db");
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { hash, compare } = require('bcrypt');
-const userModel = require('../../models/nomad/User');
+const userSchema = require('../../models/nomad/User');
 
 const desiredPath = './uploads/nomad/';
 if(!fs.existsSync(desiredPath)){
@@ -23,6 +23,8 @@ const storage = multer.diskStorage({
 const upload = multer({storage});
 
 const handleStaleAvatar = async(userId) => {
+    const db = await getConnection('nomad');
+    const userModel = db.models.User || db.model("User",userSchema);
     const { image } = await userModel.findOne({_id:userId},{_id:0,image:1});
     if(image && fs.existsSync(path.join(__dirname,"../..",image))){
         fs.promises.unlink(image);
@@ -37,6 +39,8 @@ const handleProfileUpdate = async(req,res) => {
             handleStaleAvatar(userId);
             fields.image = fields.image == 'null' ? null : req.file.path;
         }
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const update = await userModel.findByIdAndUpdate({_id:userId},{$set:fields},{
             runValidators: true,
             new: true,
@@ -61,15 +65,14 @@ const handleProfileUpdate = async(req,res) => {
         console.error(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const handlePasswordUpdate = async(req,res) => {
     try{
         const { userId } = req;
         const { password, newPassword, confirmPassword } = req.body;
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const old = await userModel.findOne({_id:userId},{_id:0,password:1});
         if(await compare(password,old.password)){
             if(newPassword === confirmPassword){
@@ -87,9 +90,6 @@ const handlePasswordUpdate = async(req,res) => {
     catch(err){
         console.error(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
-    }
-    finally{
-        await disConnect();
     }
 }
 

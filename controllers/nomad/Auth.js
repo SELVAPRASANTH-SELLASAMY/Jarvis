@@ -1,6 +1,6 @@
-const userModel = require('../../models/nomad/User');
+const userSchema = require('../../models/nomad/User');
 const { hash, compare } = require('bcrypt');
-const { connect, disConnect } = require('../db');
+const { getConnection } = require('../db');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../../middlewares/Email/Email');
 const client = require('../../middlewares/RedisClient');
@@ -28,9 +28,10 @@ const generatePassword = () => {
 }
 
 const handleSignUp = async(req,res) => {
-    //No need to connect the db it was already connected in the middleware itself.
     try{
         const { name,email,role } = req.body;
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model('User',userSchema);
         const user = await userModel.create({name,email,role});
         return res.status(201).json({
             message: "Access request created",
@@ -47,15 +48,13 @@ const handleSignUp = async(req,res) => {
         console.error(err);
         return res.status(400).json({message:"Something went wrong",error:err});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const handleSignIn = async(req,res) => {
     try{
         const {email, password} = req.body;
-        await connect('nomad');
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const user = await userModel.findOne({email,approved:true},{password:1});
         if(user){
             const validatePassword = await compare(password,user.password);
@@ -84,9 +83,6 @@ const handleSignIn = async(req,res) => {
         console.error(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const handleSignOut = (_,res) => {
@@ -99,6 +95,8 @@ const handleSignOut = (_,res) => {
 const checkAuth = async(req,res) => {
     try{
         const userId = req.userId;
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const userData = await userModel.findOne({_id: userId, approved: true},{_id: 0, name: 1, email: 1, image: 1});
         userData.role = req.role;
         return res.status(200).json({
@@ -110,15 +108,14 @@ const checkAuth = async(req,res) => {
         console.error(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const getUsers = async(req,res) => {
     try{
         const { userId, role } = req;
         if(role !== "admin") return res.status(403).json({message: "Unauthorised access"});
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const users = await userModel.find({
                 _id: {
                     $nin: [userId, process.env.PLATFORM_OWNER]
@@ -133,9 +130,6 @@ const getUsers = async(req,res) => {
         console.log(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const removeUsers = async(req,res) => {
@@ -144,6 +138,8 @@ const removeUsers = async(req,res) => {
         if(role !== "admin") return res.status(403).json({message: "Unauthorised access"});
         const { users } = req.body;
         if(users.length <= 0) return res.status(400).json({message: "No users were selected"});
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const deletion = await userModel.deleteMany({
             _id: {$in: users.filter(id => id !== process.env.PLATFORM_OWNER)}
         });
@@ -156,14 +152,13 @@ const removeUsers = async(req,res) => {
         console.log(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const handleApproval = async(req,res) => {
     try {
         const { userId } = req;
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const user = await userModel.findOne({_id: userId, role: "admin"},{_id:1});
         if(user.length <= 0){
             return res.status(401).json({message: "Unauthorised access"});
@@ -202,9 +197,6 @@ const handleApproval = async(req,res) => {
         console.log(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
-    finally{
-        await disConnect();
-    }
 }
 
 const handlePasswordReset = async(req,res) => {
@@ -220,7 +212,8 @@ const handlePasswordReset = async(req,res) => {
         const {newPassword,confirmPassword} = req.body;
         if((otp === storedOtp) && (newPassword === confirmPassword)){
             const hashedPassword = await hash(newPassword,10);
-            await connect('nomad');
+            const db = await getConnection('nomad');
+            const userModel = db.models.User || db.model("User",userSchema);
             const update = await userModel.updateOne({email: email, approved: true},{
                 $set: {
                     password: hashedPassword
@@ -236,9 +229,6 @@ const handlePasswordReset = async(req,res) => {
     catch (err){
         console.log(err);
         return res.status(500).json({message:"Couldn't change password",error:err.message});
-    }
-    finally{
-        await disConnect();
     }
 }
 

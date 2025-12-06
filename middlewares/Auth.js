@@ -1,22 +1,21 @@
-const { connect, disConnect } = require('../controllers/db');
-const userModel = require('../models/nomad/User');
+const { getConnection } = require('../controllers/db');
+const userSchema = require('../models/nomad/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('./Email/Email');
 const client = require('./RedisClient');
 const isEmailExists = async(req,res,next) => {
     try{
         const { email } = req.body;
-        await connect('nomad');
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model('User',userSchema);
         const user = await userModel.findOne({email:email});
         if(user){
-            await disConnect();
             return res.status(400).json({message: "An account with this email already exists"});
         }
         next();
     }
     catch(err){
         console.error(err);
-        await disConnect();
         return res.status(500).json({message:"Something went wrong",error:err.message});
     }
 }
@@ -26,7 +25,6 @@ const isAuthenticated = async(req,res,next) => {
         const { token } = req.cookies;
 
         if(!token){
-            await disConnect();
             return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
 
@@ -35,10 +33,10 @@ const isAuthenticated = async(req,res,next) => {
             return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
 
-        await connect('nomad');
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model('User',userSchema);
         const user = await userModel.findOne({_id: decData._id,approved: true},{_id: 1, role: 1});
         if(!user){
-            await disConnect();
             return res.status(401).json({authenticated: false,message: "Authentication failed"});
         }
         req.userId = user._id;
@@ -47,7 +45,6 @@ const isAuthenticated = async(req,res,next) => {
     } 
     catch(err){
         console.error(err);
-        await disConnect();
         if(err.name === "TokenExpiredError"){
             return res.status(401).json({message:"Session expired, please sign in again",error:err});
         }
@@ -58,7 +55,8 @@ const isAuthenticated = async(req,res,next) => {
 const generateOTP = async(req,res) => {
     try {
         const { email } = req.body;
-        await connect('nomad');
+        const db = await getConnection('nomad');
+        const userModel = db.models.User || db.model("User",userSchema);
         const user = await userModel.findOne({email: email,approved: true},{name: 1});
         if(!user){
             return res.status(404).json({message: "User not found"});
@@ -74,9 +72,6 @@ const generateOTP = async(req,res) => {
     catch (err){
         console.error(err);
         return res.status(500).json({message:"Something went wrong",error:err.message});
-    }
-    finally{
-        await disConnect();
     }
 }
 
