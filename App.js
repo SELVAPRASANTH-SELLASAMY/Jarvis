@@ -1,13 +1,12 @@
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const bodyparser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const routes = require('./routes/portfolio/Email');
+require('dotenv').config();
+const portfolioEmail = require('./routes/portfolio/Email');
 const nomadBlog = require('./routes/nomad/Blog');
 const nomadAuth = require('./routes/nomad/Auth');
 const nomadProfile = require('./routes/nomad/Profile');
-dotenv.config();
 const App = express();
 App.use(bodyparser.json({limit:'50mb'}));
 const AllowedOrigins = [
@@ -15,25 +14,33 @@ const AllowedOrigins = [
     "https://prasanth.live",
     "https://nomad.prasanth.live"
 ];
-App.use(
-    cors({
-        credentials: true,
-        origin: (origin,cb) => {
-            if(!origin || AllowedOrigins.includes(origin)){
-                cb(null,origin);
-            }
-            else{
-                cb(new Error(`Request from origin ${origin} was blocked by CORS`));
-            }
+
+const protectedCors = cors({
+    credentials: true,
+    origin: (origin,cb) => {
+        if(!origin || AllowedOrigins.includes(origin)){
+            cb(null,origin);
         }
-    })
-);
+        else{
+            cb(new Error(`Request from origin ${origin} was blocked by CORS`));
+        }
+    }
+});
+
+const protectedEndpoints = [
+    {mountPath: '/portfolio',APIrouter: portfolioEmail},
+    {mountPath: '/nomad',APIrouter: nomadAuth},
+    {mountPath: '/nomad',APIrouter: nomadProfile},
+    {mountPath: '/nomad/blog',APIrouter: nomadBlog},
+];
+
 App.use(express.json());
 App.use(cookieParser());
-App.use('/portfolio',routes);
-App.use('/nomad',nomadAuth);
-App.use('/nomad',nomadProfile);
-App.use('/nomad/blog',nomadBlog);
+
+protectedEndpoints.forEach((endPoint) => {
+    return App.use(endPoint.mountPath, protectedCors, endPoint.APIrouter);
+});
+
 App.use(express.static('views'));
 App.use('/uploads',express.static('./uploads'));
 const port = process.env.PORT;
