@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const { handleNewBlog, fetchAll, getContent, deleteBlog, updateBlog, getCategories, uploadThumbnail } = require("../../controllers/nomad/Blog");
+const { isAuthenticated } = require('../../middlewares/Auth');
+router.post('/add',isAuthenticated,uploadThumbnail.single('thumbnail'),handleNewBlog);
+router.get('/fetch',isAuthenticated,fetchAll);
+router.get('/getcontent',isAuthenticated,getContent);
+router.delete('/delete',isAuthenticated,deleteBlog);
+router.patch('/update',isAuthenticated,uploadThumbnail.single('thumbnail'),updateBlog);
+router.get('/getCategories',isAuthenticated,getCategories);
+module.exports = router;
