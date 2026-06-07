@@ -13,6 +13,7 @@ const resizeImage = async(imageBuffer, width = 1500, height = 750) => {
             height: height,
             fit: 'cover'
         })
+        .webp()
         .toBuffer();
         return resizedBuffer;
     }
@@ -29,7 +30,10 @@ if(!fs.existsSync(thumbStoreDests)){
 const saveImage = async(file) => {
     try{
         const thumbs = [await resizeImage(file.buffer), await resizeImage(file.buffer,14,7)];
-        const thumbName = `thumbnail_${Math.round(Math.random() * 100000)}_${file.originalname}`;
+        const name = file.originalname;
+        const ext = path.extname(name);
+        const webpName = name.slice(0,name.lastIndexOf(ext)) + name.slice(name.lastIndexOf(ext)).replace(ext,'.webp');
+        const thumbName = `thumbnail_${Math.round(Math.random() * 100000)}_${webpName}`;
         const saveThumbs = thumbs.map(async(thumb,index) => {
             const location = `${thumbStoreDests}/${index === 0 ? '../' : ''}${thumbName}`;
             fs.promises.writeFile(location,thumb);

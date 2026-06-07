@@ -19,6 +19,7 @@ const resizeAvatar = async(file) => {
             height: 250,
             fit: 'cover'
         })
+        .webp()
         .toBuffer();
         return resizedBuffer;
     }
@@ -30,7 +31,10 @@ const resizeAvatar = async(file) => {
 const saveAvatar = async(avatar) => {
     try{
         const resizedAvatar = await resizeAvatar(avatar);
-        const locationToSave = `${desiredPath}/avatar_${Date.now()}_${avatar.originalname}`;
+        const name = avatar.originalname;
+        const ext = path.extname(name);
+        const webpName = name.slice(0,name.lastIndexOf(ext)) + name.slice(name.lastIndexOf(ext)).replace(ext,'.webp');
+        const locationToSave = `${desiredPath}/avatar_${Date.now()}_${webpName}`;
         await fs.promises.writeFile(locationToSave,resizedAvatar);
         return locationToSave;
     }
