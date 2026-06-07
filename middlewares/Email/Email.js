@@ -5,7 +5,7 @@ const body = require('./body');
 const transporter = nodemailer.createTransport({
     host: process.env.GMAIL_HOST,
     port: process.env.GMAIL_PORT,
-    secure: true,
+    secure: false,
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
