@@ -94,7 +94,7 @@ const getContent = async(req,res) => {
         const retrivedContent = await blogModel.findOne({_id:id,owner:userId},{"_id":0,"__v":0})
                                       .populate({
                                         path:"owner",
-                                        select:"name -_id"
+                                        select:"name image -_id"
                                        });
         if(!retrivedContent){
             return res.status(404).json({message: "Requested content not found"});
